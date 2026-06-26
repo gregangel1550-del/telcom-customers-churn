@@ -1,0 +1,9 @@
+{
+  "model_name": "XGBoost + scale_pos_weight",
+  "train_auc_cv_mean": 0.833,
+  "train_auc_cv_std": 0.013,
+  "validation_auc": 0.844,
+  "threshold": 0.4,
+  "target": "Churn",
+  "version": "1.0.0"
+}

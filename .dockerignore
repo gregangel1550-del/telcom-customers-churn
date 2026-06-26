@@ -1,0 +1,9 @@
+notebooks/
+docs/
+data/
+.git/
+__pycache__/
+*.ipynb
+*.pyc
+.env
+README.md
