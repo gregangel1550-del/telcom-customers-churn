@@ -7,7 +7,6 @@ import joblib
 import numpy as np
 import pandas as pd
 
-
 BASE_DIR = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE_DIR / "data"
 MODELS_DIR = BASE_DIR / "models"
@@ -56,8 +55,12 @@ def clean_telco_data(df: pd.DataFrame) -> pd.DataFrame:
         df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce")
 
     if "Churn" in df.columns:
+    # 1. Strip any accidental whitespace from strings
         if df["Churn"].dtype == object:
-            df["Churn"] = df["Churn"].map({"Yes": 1, "No": 0})
+            df["Churn"] = df["Churn"].astype(str).str.strip()
+        
+    # 2. Map and ensure fallback for unmapped values so it forces a numeric result
+        df["Churn"] = df["Churn"].map({"Yes": 1, "No": 0}).fillna(0).astype(int)
 
     return df
 
@@ -172,3 +175,5 @@ def get_feature_names_from_preprocessor(preprocessor: Any) -> list[str]:
     cat_encoder = preprocessor.named_transformers_["cat"]["encoder"]
     cat_names = list(cat_encoder.get_feature_names_out(CATEGORICAL_FEATURES))
     return NUMERIC_FEATURES + BINARY_FEATURES + cat_names
+
+

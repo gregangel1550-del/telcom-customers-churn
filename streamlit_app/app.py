@@ -7,22 +7,21 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from utils import (
-    RAW_DATA_PATH,
-    BINARY_FEATURES,
-    CATEGORICAL_FEATURES,
-    NUMERIC_FEATURES,
-    build_single_customer_input,
-    clean_telco_data,
-    get_feature_importance,
-    get_feature_names_from_preprocessor,
-    load_model,
-    load_preprocessor,
-    load_raw_data,
-    prepare_features,
-    score_dataframe,
-    summarize_dataset,
-)
+from utils import (RAW_DATA_PATH,
+                   BINARY_FEATURES,
+                   CATEGORICAL_FEATURES,
+                   NUMERIC_FEATURES,
+                   build_single_customer_input,
+                   clean_telco_data,
+                   get_feature_importance,
+                   get_feature_names_from_preprocessor,
+                   load_model,
+                   load_preprocessor,
+                   load_raw_data,
+                   prepare_features,
+                   score_dataframe,
+                   summarize_dataset,
+                   )
 
 
 st.set_page_config(
