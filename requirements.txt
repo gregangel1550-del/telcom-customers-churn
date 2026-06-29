@@ -5,5 +5,5 @@ numpy
 scikit-learn
 xgboost
 imbalanced-learn
-shap
+shap==0.44.1
 joblib

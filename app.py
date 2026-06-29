@@ -28,7 +28,13 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 import joblib
-import shap
+# SHAP is imported safely — if the version installed on the cloud doesn't
+# support the current Python, the app still runs, just without SHAP charts.
+try:
+    import shap
+    SHAP_AVAILABLE = True
+except Exception:
+    SHAP_AVAILABLE = False
 from pathlib import Path
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -242,18 +248,19 @@ def run_prediction(customer_dict: dict, preprocessor, model) -> dict:
     # TreeExplainer uses XGBoost's tree structure for exact (non-approximate) SHAP.
     # Much faster than KernelExplainer for tree models.
     shap_df = None
-    try:
-        explainer   = shap.TreeExplainer(model)
-        shap_values = explainer.shap_values(X)
-        feat_names  = get_feature_names(preprocessor)
-        shap_df = (
-            pd.DataFrame({"feature": feat_names, "shap_value": shap_values[0]})
-            .sort_values("shap_value", key=abs, ascending=False)
-            .head(12)
-            .reset_index(drop=True)
-        )
-    except Exception:
-        pass   # SHAP unavailable — app still works, just no explanation chart
+    if SHAP_AVAILABLE:
+        try:
+            explainer   = shap.TreeExplainer(model)
+            shap_values = explainer.shap_values(X)
+            feat_names  = get_feature_names(preprocessor)
+            shap_df = (
+                pd.DataFrame({"feature": feat_names, "shap_value": shap_values[0]})
+                .sort_values("shap_value", key=abs, ascending=False)
+                .head(12)
+                .reset_index(drop=True)
+            )
+        except Exception:
+            pass
 
     return {
         "probability":      probability,
