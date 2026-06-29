@@ -28,14 +28,22 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 import joblib
-# SHAP is imported safely — if the version installed on the cloud doesn't
-# support the current Python, the app still runs, just without SHAP charts.
+from pathlib import Path
+
+# ── Safe SHAP import ──────────────────────────────────────────────────────────
+# shap.TreeExplainer does NOT need numba or llvmlite.
+# However, importing shap triggers numba auto-discovery which can crash
+# on Python 3.14 if llvmlite is not installed.
+# Setting SHAP_NO_NUMBA=1 before import disables numba entirely.
+# The app still works — SHAP explanations still run — just without numba JIT.
+import os
+os.environ.setdefault("SHAP_NO_NUMBA", "1")
+
 try:
     import shap
     SHAP_AVAILABLE = True
 except Exception:
     SHAP_AVAILABLE = False
-from pathlib import Path
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PAGE CONFIG — must be the VERY FIRST st.* call in the script
@@ -246,7 +254,8 @@ def run_prediction(customer_dict: dict, preprocessor, model) -> dict:
 
     # Step 5c — SHAP values for explainability
     # TreeExplainer uses XGBoost's tree structure for exact (non-approximate) SHAP.
-    # Much faster than KernelExplainer for tree models.
+    # Does NOT need numba or llvmlite — only KernelExplainer does.
+    # SHAP_AVAILABLE is False only if the shap package itself failed to import.
     shap_df = None
     if SHAP_AVAILABLE:
         try:
@@ -260,7 +269,7 @@ def run_prediction(customer_dict: dict, preprocessor, model) -> dict:
                 .reset_index(drop=True)
             )
         except Exception:
-            pass
+            pass   # model or data issue — app still works without SHAP chart
 
     return {
         "probability":      probability,
