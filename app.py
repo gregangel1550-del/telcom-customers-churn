@@ -139,7 +139,9 @@ def load_models():
         return None, None, f"Missing: {preprocessor_path}"
     if not model_path.exists():
         return None, None, f"Missing: {model_path}"
-
+    st.write(f"Loading preprocessor from: {preprocessor_path.resolve()}")
+    st.write(f"File exists: {preprocessor_path.exists()}")
+    st.write(f"Last modified: {preprocessor_path.stat().st_mtime}")
     preprocessor = joblib.load(preprocessor_path)
     model        = joblib.load(model_path)
     return preprocessor, model, None
