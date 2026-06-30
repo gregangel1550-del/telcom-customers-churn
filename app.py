@@ -217,6 +217,22 @@ def run_prediction(customer_dict: dict, preprocessor, model) -> dict:
     df = pd.DataFrame([customer_dict])
     df["tenure_bin"] = df["tenure"].apply(make_tenure_bin)
 
+    # Step 2b — force numeric columns to float64
+    # WHY this is necessary:
+    # When Python builds the dict from Streamlit widgets, numeric values
+    # come in as Python int or float — but pd.DataFrame([dict]) sometimes
+    # infers them as dtype 'object' (e.g. when a value is None or mixed).
+    # The SimpleImputer inside the preprocessor was fitted on float64 columns.
+    # If it receives object-dtype columns at transform time it raises:
+    #   ValueError: dtype('O') cannot be cast to dtype('float64')
+    # Explicitly casting here guarantees the dtypes match what the imputer expects.
+    numeric_cols = ["tenure", "MonthlyCharges", "TotalCharges"]
+    for col in numeric_cols:
+        df[col] = pd.to_numeric(df[col], errors="coerce").astype("float64")
+    # Fallback: if any value failed conversion (became NaN), default to 0.0 —
+    # matches the imputer strategy="constant", fill_value=0 from Phase 3 training.
+    df[numeric_cols] = df[numeric_cols].fillna(0.0)
+
     # Step 3
     X = preprocessor.transform(df)
 
@@ -736,9 +752,20 @@ def render_batch_tab(preprocessor, model):
                 with st.spinner(f"Scoring {len(df):,} customers..."):
 
                     # Preprocessing — same steps as single prediction
-                    df["TotalCharges"] = pd.to_numeric(
-                        df["TotalCharges"], errors="coerce"
-                    ).fillna(0)
+                    # Force all three numeric columns to float64 explicitly.
+                    # CSVs uploaded by users often contain mixed types (e.g.
+                    # blank cells, stray text, or numbers read as strings) —
+                    # pd.read_csv can silently infer these as dtype 'object'.
+                    # The SimpleImputer inside preprocessor was fitted on
+                    # float64 columns, so object-dtype input raises:
+                    #   ValueError: dtype('O') cannot be cast to dtype('float64')
+                    numeric_cols = ["tenure", "MonthlyCharges", "TotalCharges"]
+                    for col in numeric_cols:
+                        df[col] = pd.to_numeric(df[col], errors="coerce").astype("float64")
+                    # Fill any values that failed conversion (became NaN) with 0,
+                    # matching the imputer strategy used in Phase 3 training.
+                    df[numeric_cols] = df[numeric_cols].fillna(0.0)
+
                     df["tenure_bin"] = df["tenure"].apply(make_tenure_bin)
 
                     X    = preprocessor.transform(df)
